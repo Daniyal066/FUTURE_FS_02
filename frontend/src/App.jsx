@@ -80,7 +80,7 @@ export default function App() {
               </svg>
               <div>
                 <h4 className="font-bold text-sm">Server Connectivity Error</h4>
-                <p className="text-xs text-rose-400/80 mt-0.5">Please ensure the node.js/express backend server is running on port 5000.</p>
+                <p className="text-xs text-rose-400/80 mt-0.5">Please ensure the node.js/express backend server is running on port 5001.</p>
               </div>
             </div>
             <button onClick={loadData} className="px-4 py-2 bg-rose-500/20 hover:bg-rose-500/35 border border-rose-500/30 text-rose-300 hover:text-white rounded-xl text-xs font-bold transition-all">
