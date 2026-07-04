@@ -1,28 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { fetchLeads } from './api';
+import React from 'react';
+import { LeadProvider, useLeads } from './context/LeadContext';
 import LeadForm from './components/LeadForm';
 import LeadDashboard from './components/LeadDashboard';
 
-export default function App() {
-  const [leads, setLeads] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  const loadData = async () => {
-    try {
-      setError('');
-      const data = await fetchLeads();
-      setLeads(data);
-    } catch (err) {
-      setError(err.message || 'Could not connect to the API server.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadData();
-  }, []);
+function MainLayout() {
+  const { leads, loading, error, toast, getLeadsList } = useLeads();
 
   // Compute CRM Stats
   const totalLeads = leads.length;
@@ -31,10 +13,30 @@ export default function App() {
   const conversionRate = totalLeads > 0 ? Math.round((convertedLeads / totalLeads) * 100) : 0;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col relative overflow-hidden">
       {/* Background blobs for premium depth */}
       <div className="absolute top-0 left-1/4 w-[40rem] h-[40rem] bg-indigo-500/10 rounded-full blur-[10rem] pointer-events-none -z-10" />
       <div className="absolute bottom-0 right-1/4 w-[40rem] h-[40rem] bg-purple-500/10 rounded-full blur-[10rem] pointer-events-none -z-10" />
+
+      {/* Global Toast Notification */}
+      {toast && (
+        <div className={`fixed bottom-6 right-6 z-[999] p-4 rounded-xl border shadow-2xl flex items-center gap-2.5 transition-all duration-300 ${
+          toast.type === 'error'
+            ? 'bg-rose-500/10 text-rose-450 border-rose-500/25'
+            : 'bg-emerald-500/10 text-emerald-450 border-emerald-500/25'
+        }`}>
+          {toast.type === 'error' ? (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 flex-shrink-0">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+            </svg>
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 flex-shrink-0">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
+            </svg>
+          )}
+          <span className="text-sm font-semibold">{toast.message}</span>
+        </div>
+      )}
 
       {/* Header */}
       <header className="border-b border-slate-900 bg-slate-950/60 backdrop-blur-md sticky top-0 z-50">
@@ -50,13 +52,13 @@ export default function App() {
                 AetherCRM
               </h1>
               <p className="text-[10px] text-indigo-400 font-semibold tracking-widest uppercase mt-0.5">
-                Mini CRM & Lead Engine
+                Enterprise Client & Lead Engine
               </p>
             </div>
           </div>
           <div className="flex items-center gap-4">
             <button
-              onClick={loadData}
+              onClick={getLeadsList}
               disabled={loading}
               className="p-2 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white rounded-xl border border-slate-800 hover:border-slate-700 transition-all active:scale-95 flex items-center gap-2 text-sm font-semibold"
             >
@@ -71,19 +73,19 @@ export default function App() {
 
       {/* Main Body */}
       <main className="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        {/* Connection Error Banner */}
+        {/* Connection Offline Alert */}
         {error && (
-          <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-rose-400 flex items-center justify-between gap-4 animate-bounce">
+          <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-rose-450 flex items-center justify-between gap-4 animate-bounce">
             <div className="flex items-center gap-3">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 flex-shrink-0">
                 <path fillRule="evenodd" d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z" clipRule="evenodd" />
               </svg>
               <div>
-                <h4 className="font-bold text-sm">Server Connectivity Error</h4>
+                <h4 className="font-bold text-sm">Server Offline Warning</h4>
                 <p className="text-xs text-rose-400/80 mt-0.5">Please ensure the node.js/express backend server is running on port 5001.</p>
               </div>
             </div>
-            <button onClick={loadData} className="px-4 py-2 bg-rose-500/20 hover:bg-rose-500/35 border border-rose-500/30 text-rose-300 hover:text-white rounded-xl text-xs font-bold transition-all">
+            <button onClick={getLeadsList} className="px-4 py-2 bg-rose-500/20 hover:bg-rose-500/35 border border-rose-500/30 text-rose-350 hover:text-white rounded-xl text-xs font-bold transition-all">
               Retry Connection
             </button>
           </div>
@@ -91,12 +93,11 @@ export default function App() {
 
         {/* Stats Section */}
         <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Stat 1: Total */}
           <div className="glow-card bg-slate-900/60 backdrop-blur-xl border border-slate-800/85 p-5 rounded-2xl flex items-center justify-between">
             <div>
               <span className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Leads</span>
-              <span className="text-2xl lg:text-3xl font-bold text-slate-100 mt-1 block">
-                {loading ? '...' : totalLeads}
+              <span className="text-2xl lg:text-3xl font-bold text-slate-100 mt- block">
+                {loading && leads.length === 0 ? '...' : totalLeads}
               </span>
             </div>
             <div className="p-3 bg-indigo-500/10 text-indigo-400 rounded-xl border border-indigo-500/20">
@@ -106,12 +107,11 @@ export default function App() {
             </div>
           </div>
 
-          {/* Stat 2: Contacted */}
           <div className="glow-card bg-slate-900/60 backdrop-blur-xl border border-slate-800/85 p-5 rounded-2xl flex items-center justify-between">
             <div>
               <span className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Contacted</span>
               <span className="text-2xl lg:text-3xl font-bold text-slate-100 mt-1 block">
-                {loading ? '...' : contactedLeads}
+                {loading && leads.length === 0 ? '...' : contactedLeads}
               </span>
             </div>
             <div className="p-3 bg-amber-500/10 text-amber-400 rounded-xl border border-amber-500/20">
@@ -121,12 +121,11 @@ export default function App() {
             </div>
           </div>
 
-          {/* Stat 3: Converted */}
           <div className="glow-card bg-slate-900/60 backdrop-blur-xl border border-slate-800/85 p-5 rounded-2xl flex items-center justify-between">
             <div>
               <span className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Converted</span>
               <span className="text-2xl lg:text-3xl font-bold text-slate-100 mt-1 block">
-                {loading ? '...' : convertedLeads}
+                {loading && leads.length === 0 ? '...' : convertedLeads}
               </span>
             </div>
             <div className="p-3 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20">
@@ -136,12 +135,11 @@ export default function App() {
             </div>
           </div>
 
-          {/* Stat 4: Rate */}
           <div className="glow-card bg-slate-900/60 backdrop-blur-xl border border-slate-800/85 p-5 rounded-2xl flex items-center justify-between">
             <div>
               <span className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Win Rate</span>
               <span className="text-2xl lg:text-3xl font-bold text-slate-100 mt-1 block">
-                {loading ? '...' : `${conversionRate}%`}
+                {loading && leads.length === 0 ? '...' : `${conversionRate}%`}
               </span>
             </div>
             <div className="p-3 bg-purple-500/10 text-purple-400 rounded-xl border border-purple-500/20">
@@ -153,28 +151,28 @@ export default function App() {
           </div>
         </section>
 
-        {/* Dashboard Grid */}
+        {/* Form & Table Grid */}
         <section className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-          {/* Left Column: Input Form */}
           <div className="lg:col-span-1">
-            <LeadForm onLeadAdded={loadData} />
+            <LeadForm />
           </div>
-
-          {/* Right Column: Interactive Leads Directory */}
           <div className="lg:col-span-2">
-            <LeadDashboard
-              leads={leads}
-              loading={loading}
-              onRefresh={loadData}
-            />
+            <LeadDashboard />
           </div>
         </section>
       </main>
 
-      {/* Footer */}
       <footer className="border-t border-slate-900 bg-slate-950/40 text-center py-6 mt-12 text-xs text-slate-500 font-medium">
         <p>&copy; {new Date().getFullYear()} AetherCRM Engine. Designed for Future Intern Evaluation.</p>
       </footer>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <LeadProvider>
+      <MainLayout />
+    </LeadProvider>
   );
 }
