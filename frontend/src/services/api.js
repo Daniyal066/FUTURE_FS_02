@@ -47,8 +47,8 @@ const customFetch = async (url, options = {}) => {
 
 export const api = {
   get: (url, options) => customFetch(url, { ...options, method: 'GET' }),
-  post: (url, body, options) => customFetch(url, { ...options, method: 'POST', body }),
-  put: (url, body, options) => customFetch(url, { ...options, method: 'PUT', body }),
+  post: (url, body, options) => customFetch(url, { ...options, method: 'POST', body: JSON.stringify(body) }),
+  put: (url, body, options) => customFetch(url, { ...options, method: 'PUT', body: JSON.stringify(body) }),
   delete: (url, options) => customFetch(url, { ...options, method: 'DELETE' })
 };
 export default api;
