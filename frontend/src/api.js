@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:5001/api';
+const API_BASE_URL = 'https://future-fs-02-fuh8.onrender.com/api';
 
 /**
  * Fetches all leads from the database, sorted newest first.
